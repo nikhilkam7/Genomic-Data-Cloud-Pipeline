@@ -1,0 +1,25 @@
+# Data landing zone and processed artifacts - never committed, always reproducible
+data/raw/
+data/processed/
+legacy/outputs/
+
+# Secrets / cloud credentials
+service-account*.json
+*-credentials.json
+gcp-key*.json
+.env
+.env.*
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.pytest_cache/
+.ruff_cache/
+*.egg-info/
+
+# OS / editor
+.DS_Store
+.vscode/
+.idea/
