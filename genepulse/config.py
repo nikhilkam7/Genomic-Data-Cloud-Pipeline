@@ -6,6 +6,7 @@ has to hard-code them. Import what you need:
     from genepulse.config import RAW_DIR, clinvar_url
 """
 
+import os
 from pathlib import Path
 
 # --- Project layout -----------------------------------------------------
@@ -27,6 +28,15 @@ CLINVAR_ARCHIVE_SUBDIR = "archive"
 # --- Download behaviour ---------------------------------------------------
 DOWNLOAD_CHUNK_BYTES = 1024 * 1024   # stream the file 1 MiB at a time
 DOWNLOAD_TIMEOUT_SECONDS = 60        # fail fast if the server stops responding
+
+# --- GCP / BigQuery (used from the Load stage onward) ----------------------
+# No project ID or credentials are ever hard-coded or committed here. The
+# project ID comes from the environment, and auth comes from whatever
+# `gcloud auth application-default login` (or GOOGLE_APPLICATION_CREDENTIALS)
+# has set up on the machine running load.py.
+GCP_PROJECT_ID = os.environ.get("GENEPULSE_GCP_PROJECT")
+BQ_DATASET = os.environ.get("GENEPULSE_BQ_DATASET", "genepulse")
+BQ_TABLE = "variant_releases"
 
 
 def clinvar_url(release: str | None = None) -> str:
