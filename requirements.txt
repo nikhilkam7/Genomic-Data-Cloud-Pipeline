@@ -4,9 +4,9 @@ pandas>=2.2
 pyarrow>=16.0
 
 # Cloud (used from the Load stage onward)
-google-cloud-storage>=2.16
-google-cloud-bigquery>=3.20
-pandas-gbq>=0.23
+azure-identity>=1.17
+pyodbc>=5.1
+sqlalchemy>=2.0
 
 # Dashboard
 streamlit>=1.35
