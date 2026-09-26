@@ -112,3 +112,12 @@ def test_transform_selects_release_by_label(fake_raw):
     older.write_bytes(fake_raw.read_bytes())
     result = transform.transform(release="2026-07")
     assert result.release_label == "2026-07"
+
+
+def test_transform_writes_millisecond_timestamps(fake_raw):
+    # Athena mis-reads pandas' default nanosecond timestamps.
+    import pyarrow.parquet as pq
+
+    result = transform.transform()
+    field = pq.read_schema(result.output_path).field("last_evaluated")
+    assert str(field.type) == "timestamp[ms]"

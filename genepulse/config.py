@@ -14,6 +14,14 @@ from pathlib import Path
 # is the repo root. Resolving keeps things correct no matter where you run from.
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 
+# Optional: pick up settings from a local .env file (never committed).
+try:
+    from dotenv import load_dotenv
+
+    load_dotenv(PROJECT_ROOT / ".env")
+except ImportError:  # python-dotenv not installed - plain env vars still work
+    pass
+
 DATA_DIR = PROJECT_ROOT / "data"
 RAW_DIR = DATA_DIR / "raw"              # landing zone: untouched source files
 PROCESSED_DIR = DATA_DIR / "processed"  # cleaned output of the Transform stage
@@ -29,14 +37,29 @@ CLINVAR_ARCHIVE_SUBDIR = "archive"
 DOWNLOAD_CHUNK_BYTES = 1024 * 1024   # stream the file 1 MiB at a time
 DOWNLOAD_TIMEOUT_SECONDS = 60        # fail fast if the server stops responding
 
-# --- GCP / BigQuery (used from the Load stage onward) ----------------------
-# No project ID or credentials are ever hard-coded or committed here. The
-# project ID comes from the environment, and auth comes from whatever
-# `gcloud auth application-default login` (or GOOGLE_APPLICATION_CREDENTIALS)
-# has set up on the machine running load.py.
-GCP_PROJECT_ID = os.environ.get("GENEPULSE_GCP_PROJECT")
-BQ_DATASET = os.environ.get("GENEPULSE_BQ_DATASET", "genepulse")
-BQ_TABLE = "variant_releases"
+DIFF_DIR = DATA_DIR / "diffs"          # output of the local Diff stage
+
+# --- AWS: S3 + Athena (used by the Load stage) ------------------------------
+# No bucket name or credentials are ever hard-coded or committed here. The
+# bucket comes from the environment, and auth comes from whatever
+# `aws configure` (i.e. ~/.aws/credentials, or AWS_* env vars) has set up on
+# the machine running load.py. boto3 finds those credentials on its own.
+AWS_REGION = os.environ.get("AWS_REGION", "us-east-1")
+S3_BUCKET = os.environ.get("GENEPULSE_S3_BUCKET")
+S3_PROCESSED_PREFIX = "processed"   # s3://<bucket>/processed/release=<label>/variants.parquet
+S3_MANIFEST_PREFIX = "manifests"    # s3://<bucket>/manifests/<label>.transform_manifest.json
+ATHENA_DATABASE = os.environ.get("GENEPULSE_ATHENA_DATABASE", "genepulse")
+ATHENA_TABLE = "variants"
+
+
+def s3_processed_key(release_label: str) -> str:
+    """S3 object key for one processed release.
+
+    The ``release=<label>`` folder is a Hive-style partition: Athena reads the
+    label from the path, so a query filtered to one or two releases only scans
+    those files (and only costs for those bytes).
+    """
+    return f"{S3_PROCESSED_PREFIX}/release={release_label}/variants.parquet"
 
 
 def clinvar_url(release: str | None = None) -> str:

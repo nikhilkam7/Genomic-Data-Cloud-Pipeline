@@ -196,7 +196,15 @@ def transform(release: str | None = None, *, force: bool = False) -> TransformRe
 
     _assert_quality(df)
 
-    df.to_parquet(out_path, engine="pyarrow", index=False)
+    # pandas stores timestamps in nanoseconds; Athena (and some other Parquet
+    # readers) mis-read ns timestamps, so store dates at millisecond precision.
+    df.to_parquet(
+        out_path,
+        engine="pyarrow",
+        index=False,
+        coerce_timestamps="ms",
+        allow_truncated_timestamps=True,
+    )
 
     counts = df["significance_category"].value_counts().to_dict()
     result = TransformResult(

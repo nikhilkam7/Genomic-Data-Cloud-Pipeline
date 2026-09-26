@@ -1,14 +1,17 @@
 # Data landing zone and processed artifacts - never committed, always reproducible
 data/raw/
 data/processed/
+data/diffs/
+*.duckdb
 legacy/outputs/
 
 # Secrets / cloud credentials
-service-account*.json
 *-credentials.json
-gcp-key*.json
+*accessKeys*.csv
+.aws/
 .env
 .env.*
+!.env.example
 
 # Python
 __pycache__/
