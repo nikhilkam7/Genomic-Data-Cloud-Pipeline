@@ -29,13 +29,15 @@ CLINVAR_ARCHIVE_SUBDIR = "archive"
 DOWNLOAD_CHUNK_BYTES = 1024 * 1024   # stream the file 1 MiB at a time
 DOWNLOAD_TIMEOUT_SECONDS = 60        # fail fast if the server stops responding
 
-# --- AWS Redshift Serverless (used from the Load stage onward) -------------
-# No workgroup name, database name, or credentials are ever hard-coded or
-# committed here. The workgroup/database come from the environment, and auth
-# comes from whatever `aws configure` (or `aws sso login`) has set up on the
-# machine running load.py - no password stored anywhere.
-AWS_REDSHIFT_WORKGROUP = os.environ.get("GENEPULSE_REDSHIFT_WORKGROUP")  # e.g. "genepulse-wg"
-AWS_REDSHIFT_DATABASE = os.environ.get("GENEPULSE_REDSHIFT_DATABASE", "genepulse")
+# --- AWS S3 + Athena data lake (used from the Load stage onward) -----------
+# No bucket name, database name, or credentials are ever hard-coded or
+# committed here. Auth comes from whatever `aws configure` (or
+# `aws sso login`) has set up on the machine running load.py - no password
+# stored anywhere. DuckDB needs no cloud setup at all: it queries the same
+# Parquet files locally, so sql/analytics/ queries are written and tested
+# against DuckDB before running unchanged against Athena.
+AWS_S3_BUCKET = os.environ.get("GENEPULSE_S3_BUCKET")  # e.g. "genepulse-data"
+ATHENA_DATABASE = os.environ.get("GENEPULSE_ATHENA_DATABASE", "genepulse")
 SQL_TABLE = "variant_releases"
 
 
