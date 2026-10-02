@@ -40,6 +40,16 @@ AWS_S3_BUCKET = os.environ.get("GENEPULSE_S3_BUCKET")  # e.g. "genepulse-data"
 ATHENA_DATABASE = os.environ.get("GENEPULSE_ATHENA_DATABASE", "genepulse")
 SQL_TABLE = "variant_releases"
 
+# --- Query engine (used by genepulse/query.py) ------------------------------
+# "duckdb" runs analytics SQL locally against the Parquet files in
+# PROCESSED_DIR - no AWS account needed. "athena" runs the exact same SQL
+# against the real S3 + Glue data lake. Athena needs somewhere to park its
+# query results, which is what ATHENA_S3_STAGING_DIR is for.
+QUERY_ENGINE = os.environ.get("GENEPULSE_QUERY_ENGINE", "duckdb")
+ATHENA_S3_STAGING_DIR = os.environ.get("GENEPULSE_ATHENA_STAGING_DIR") or (
+    f"s3://{AWS_S3_BUCKET}/athena-results/" if AWS_S3_BUCKET else None
+)
+
 
 def clinvar_url(release: str | None = None) -> str:
     """Return the download URL for a ClinVar release.
