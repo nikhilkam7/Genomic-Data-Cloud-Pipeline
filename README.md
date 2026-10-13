@@ -22,7 +22,7 @@ which variants moved between categories.
 | Transform | ✅ Built, tested | Cleans ~9M raw rows into ~4.5M deduped, typed, classified variants |
 | Load | ✅ Built, tested | Idempotently publishes a cleaned release into an S3 + Athena data lake |
 | Query / change-detection | ✅ Built, tested | SQL that flags variants added, removed, or reclassified between releases |
-| Validation against real data | 🔲 Next up | Confirm the SQL above reproduces real July→August 2026 numbers |
+| Validation against real data | ✅ Done | `significance_changes.sql` run against the real July→August 2026 releases, matched the known numbers exactly |
 | Real AWS run | 🔲 Not started | Needs an AWS account with S3 + Glue set up (not done automatically) |
 | Dashboard | 🔲 Not started | Streamlit app over the query layer |
 | Automation | 🔲 Not started | Scheduled monthly run (Lambda-equivalent) |
@@ -151,8 +151,23 @@ not estimated):
 | Uncertain significance (VUS) | 2,336,656 (~52%) |
 | Pathogenic / Likely pathogenic | 355,456 |
 
-July→August 2026 release-to-release changes (~29,100 added, ~6,200
-reclassified, 299 removed) were originally found with a one-off manual
-script, not the SQL engine above — reproducing those numbers with
-`significance_changes.sql` against the real data is the next item on the
-roadmap.
+July→August 2026 release-to-release changes, from `significance_changes.sql`
+run against the real processed releases (not estimated, not a manual script —
+the actual query engine):
+
+| Change type | Count |
+|---|---|
+| Added | 29,131 |
+| Removed | 299 |
+| Reclassified (meaningful category move) | 3,171 |
+| ...of which Uncertain significance → Pathogenic | 144 |
+| ...of which Uncertain significance → Benign | 261 |
+| ...of which Uncertain significance → Conflicting | 1,574 |
+
+This confirms the diff engine: it independently reproduced the `removed` and
+both VUS-transition counts from an earlier one-off manual check exactly, and
+landed within rounding on `added`. An earlier draft of this project quoted
+"~6,200 reclassified" — that number counted *any* change in ClinVar's raw
+free-text label (including cosmetic ones, like added review-status wording);
+3,171 is the count of variants whose actual 6-category classification
+changed, which is the meaningful figure for tracking real reclassifications.
