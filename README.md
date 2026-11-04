@@ -24,7 +24,7 @@ which variants moved between categories.
 | Query / change-detection | ✅ Built, tested | SQL that flags variants added, removed, or reclassified between releases |
 | Validation against real data | ✅ Done | `significance_changes.sql` run against the real July→August 2026 releases, matched the known numbers exactly |
 | Real AWS run | 🔲 Not started | Needs an AWS account with S3 + Glue set up (not done automatically) |
-| Dashboard | 🔲 Not started | Streamlit app over the query layer |
+| Dashboard | ✅ Built, tested | Streamlit app over the query layer |
 | Automation | 🔲 Not started | Scheduled monthly run (Lambda-equivalent) |
 
 "Built, tested" means: real code, a real test suite, passing locally,
@@ -71,7 +71,11 @@ sql/analytics/
 ├── latest_significance.sql    each variant's most recent classification
 └── significance_changes.sql   the diff engine: added / removed / reclassified
 
-tests/              60+ tests, all offline — no network or AWS calls
+dashboard/
+├── app.py          the Streamlit UI — thin, no logic of its own
+└── data.py         everything the UI shows, as plain tested functions
+
+tests/              65+ tests, all offline — no network or AWS calls
 data/               gitignored — everything here is reproducible by rerunning the stages
 legacy/             pre-pivot code (an earlier synthetic-data version of this project), kept for reference
 ```
@@ -125,17 +129,30 @@ python -m genepulse.query sql/analytics/significance_changes.sql --engine athena
 Every stage is idempotent: re-running it is a no-op unless the input changed
 or you pass `--force`.
 
+## Dashboard
+
+```bash
+streamlit run dashboard/app.py
+```
+
+Shows the current classification breakdown and, once at least two releases
+are loaded, the added/removed/reclassified counts and a ranked breakdown of
+every reclassification type between the two most recent releases. Defaults
+to the DuckDB engine (`GENEPULSE_QUERY_ENGINE`), switchable to Athena from
+the sidebar.
+
 ## Testing
 
 ```bash
 pytest tests/ -q
-ruff check genepulse/ tests/ sql/
+ruff check genepulse/ dashboard/ tests/ sql/
 ```
 
 The entire suite runs offline — no network access, no AWS account, no cost.
 `tests/test_sql_analytics.py` validates the change-detection SQL against a
 small, hand-verified synthetic dataset where every expected answer is known
-in advance.
+in advance; `tests/test_dashboard_data.py` checks the dashboard's numbers
+against the same fixture.
 
 ## Key numbers
 
